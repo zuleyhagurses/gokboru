@@ -13,4 +13,6 @@ ENV/
 *.log
 *.sqlite3
 *.db
+*.joblib
+*.csv
 .ipynb_checkpoints/

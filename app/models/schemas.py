@@ -122,3 +122,16 @@ class LaunchSimulationResult(BaseModel):
 class HistoryResponse(BaseModel):
     total_simulations: int = Field(description="Toplam simülasyon sayısı")
     results: list[LaunchSimulationResult] = Field(description="Simülasyon sonuçları")
+
+
+class AIPredictionResult(BaseModel):
+    predicted_status: Literal["GO", "CONDITIONAL", "NO-GO"]
+    ai_model_path: str = Field(description="Kullanılan AI model dosya yolu")
+    note: Optional[str] = Field(default=None, description="AI tahminine ek bilgi")
+
+
+class AIMetricsResponse(BaseModel):
+    ai_model_path: str = Field(description="Eğitilmiş AI model dosya yolu")
+    ai_dataset_path: str = Field(description="Değerlendirme için kullanılan dataset yolu")
+    accuracy: float = Field(..., ge=0, le=1, description="Doğruluk skoru")
+    report: str = Field(description="Sınıflandırma raporu")

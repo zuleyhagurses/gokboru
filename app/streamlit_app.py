@@ -274,6 +274,8 @@ header    { visibility: hidden; }
 # ─── Constants ────────────────────────────────────────────────────────────────
 
 API_URL = "http://localhost:8000/api/v1/simulate-launch"
+AI_API_URL = "http://localhost:8000/api/v1/ai-predict"
+AI_METRICS_URL = "http://localhost:8000/api/v1/ai/metrics"
 
 PLOTLY_LAYOUT = dict(
     paper_bgcolor="rgba(0,0,0,0)",
@@ -405,7 +407,26 @@ else:
         error_msg = "TIMEOUT — Backend took too long to respond."
     except Exception as exc:
         error_msg = f"UNEXPECTED ERROR: {str(exc)}"
+ai_prediction = None
+ai_metrics = None
+ai_warning = None
 
+if data is not None:
+    try:
+        ai_resp = requests.post(AI_API_URL, json=payload, timeout=5)
+        if ai_resp.status_code == 200:
+            ai_prediction = ai_resp.json().get("predicted_status")
+        else:
+            ai_warning = f"AI tahmini alınamadı: {ai_resp.status_code}"
+    except requests.exceptions.RequestException:
+        ai_warning = "AI servisine bağlanamadı. Model eğitilmiş olmayabilir."
+
+    try:
+        metrics_resp = requests.get(AI_METRICS_URL, timeout=5)
+        if metrics_resp.status_code == 200:
+            ai_metrics = metrics_resp.json()
+    except requests.exceptions.RequestException:
+        pass
 # ─── Header ───────────────────────────────────────────────────────────────────
 
 st.markdown('<div class="launch-header">🇹🇷 Gökbörü</div>', unsafe_allow_html=True)
@@ -445,6 +466,22 @@ override_html = (
     if override["triggered"] else ""
 )
 
+ai_panel = ""
+if ai_prediction:
+    ai_panel = (
+        f"<div style='margin-top:0.8rem;padding:0.9rem 1rem;background:#081316;"
+        f"border:1px solid #0f2a40;border-radius:6px;color:#a8d6ff;'>"
+        f"<strong>AI Tahmini:</strong> {ai_prediction}"
+        f"</div>"
+    )
+elif ai_warning:
+    ai_panel = (
+        f"<div style='margin-top:0.8rem;padding:0.9rem 1rem;background:#110a0a;"
+        f"border:1px solid #4a1a1a;border-radius:6px;color:#ffcfb8;'>"
+        f"<strong>{ai_warning}</strong>"
+        f"</div>"
+    )
+
 st.markdown(f"""
 <div class="status-banner {css_cls}">
     <div class="status-icon">{icon}</div>
@@ -459,6 +496,23 @@ st.markdown(f"""
     {override_html}
 </div>
 """, unsafe_allow_html=True)
+
+if ai_panel:
+    st.markdown(ai_panel, unsafe_allow_html=True)
+
+if ai_metrics is not None:
+    st.markdown('<div class="section-title" style="margin-top:1rem;">AI MODEL PERFORMANSI</div>', unsafe_allow_html=True)
+    st.markdown(
+        f"<div class='log-panel'>"
+        f"<strong>Doğruluk:</strong> {ai_metrics['accuracy']:.4f}<br>"
+        f"<strong>Model:</strong> {ai_metrics['ai_model_path']}<br>"
+        f"<strong>Dataset:</strong> {ai_metrics['ai_dataset_path']}<br><br>"
+        f"<pre style='white-space:pre-wrap; font-family:Share Tech Mono, monospace; font-size:0.75rem;'>"
+        f"{ai_metrics['report']}"
+        f"</pre>"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
 
 # ─── Metric Cards ─────────────────────────────────────────────────────────────
 

@@ -4,6 +4,14 @@ from app.models.schemas import (
     LaunchSimulationRequest,
     LaunchSimulationResult,
     HistoryResponse,
+    AIPredictionResult,
+    AIMetricsResponse,
+)
+from app.services.ai import (
+    DEFAULT_DATASET_PATH,
+    DEFAULT_MODEL_PATH,
+    evaluate_ai_model,
+    predict_status,
 )
 from app.services.simulation import run_simulation
 
@@ -31,6 +39,58 @@ def simulate_launch(request: LaunchSimulationRequest) -> LaunchSimulationResult:
 
     _simulation_history[result.simulation_id] = result
     return result
+
+
+@router.post(
+    "/ai-predict",
+    response_model=AIPredictionResult,
+    summary="AI modeline göre fırlatma durumunu tahmin et",
+    status_code=200,
+)
+def predict_launch_with_ai(request: LaunchSimulationRequest) -> AIPredictionResult:
+    try:
+        predicted_status = predict_status(request)
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "AI modeli bulunamadı. Önce `python train_ai.py --samples 2000` ile model eğitin."
+            ),
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"AI tahmin hatası: {str(exc)}")
+
+    return AIPredictionResult(
+        predicted_status=predicted_status,
+        ai_model_path=str(DEFAULT_MODEL_PATH),
+        note="AI tabanlı tahmin sonucu",
+    )
+
+
+@router.get(
+    "/ai/metrics",
+    response_model=AIMetricsResponse,
+    summary="Eğitilmiş modelin doğruluk ve performans raporunu getir",
+)
+def get_ai_metrics() -> AIMetricsResponse:
+    try:
+        accuracy, report = evaluate_ai_model()
+    except FileNotFoundError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "AI modeli veya sentetik dataset bulunamadı. Önce `python train_ai.py --samples 2000` çalıştırın."
+            ),
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"AI değerlendirme hatası: {str(exc)}")
+
+    return AIMetricsResponse(
+        ai_model_path=str(DEFAULT_MODEL_PATH),
+        ai_dataset_path=str(DEFAULT_DATASET_PATH),
+        accuracy=accuracy,
+        report=report,
+    )
 
 
 @router.get(
