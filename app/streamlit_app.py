@@ -12,7 +12,7 @@ from datetime import datetime
 
 st.set_page_config(
     page_title="Gökbörü | Görev Kontrol Merkezi",
-    page_icon="🚀",
+    page_icon="🇹🇷",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -408,7 +408,7 @@ else:
 
 # ─── Header ───────────────────────────────────────────────────────────────────
 
-st.markdown('<div class="launch-header">🚀 Gökbörü</div>', unsafe_allow_html=True)
+st.markdown('<div class="launch-header">🇹🇷 Gökbörü</div>', unsafe_allow_html=True)
 st.markdown('<div class="launch-subtitle">Görev Kontrol Merkezi  //  Fırlatma Karar Destek Sistemi</div>',
             unsafe_allow_html=True)
 

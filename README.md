@@ -1,4 +1,4 @@
-# 🚀 Gökbörü: Akıllı Fırlatma Karar Sistemi
+# 🇹🇷 Gökbörü: Akıllı Fırlatma Karar Sistemi
 
 ## Setup
 ```bash
