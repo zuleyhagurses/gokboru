@@ -1,46 +1,50 @@
-# 🚀 Gökbörü: Akıllı Fırlatma Karar Sistemi
+# 🇹🇷 Gökbörü: Akıllı Fırlatma Karar Sistemi
 
-## Setup
+Bu proje, Türkçe yerelleştirilmiş bir füze fırlatma karar destek sistemi için prototip bir backend ve frontend içerir. AI hazır hale gelmesi için sentetik veri üretimi ve model eğitimi desteklenmiştir.
+
+## Kurulum
+
+1. Sanal ortam oluşturun:
+
 ```bash
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+python -m venv .venv
+source .venv/bin/activate
 ```
 
-## Docs
-- Swagger UI: http://localhost:8000/docs
-- ReDoc:       http://localhost:8000/redoc
+2. Bağımlılıkları yükleyin:
 
-## Sample Request
 ```bash
-curl -X POST http://localhost:8000/api/v1/simulate-launch \
-  -H "Content-Type: application/json" \
-  -d '{
-    "site_name": "Cape Canaveral LC-39A",
-    "meteorological": {
-      "wind_speed_knots": 12.5,
-      "wind_direction_deg": 270,
-      "humidity_percent": 55,
-      "cloud_coverage_percent": 20,
-      "lightning_probability_percent": 5,
-      "temperature_celsius": 24
-    },
-    "geographic": {
-      "latitude_deg": 28.5,
-      "longitude_deg": -80.6,
-      "distance_to_nearest_city_km": 65,
-      "elevation_m": 3
-    },
-    "logistic": {
-      "fuel_availability_percent": 98,
-      "infrastructure_readiness_percent": 95,
-      "range_safety_cleared": true,
-      "crew_readiness_percent": 92,
-      "supply_chain_index": 88
-    },
-    "weights": {
-      "meteorological": 0.40,
-      "geographic": 0.30,
-      "logistic": 0.30
-    }
-  }'
+pip install -r app/requirements.txt
 ```
+
+## Çalıştırma
+
+Backend:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Frontend:
+
+```bash
+streamlit run app/streamlit_app.py
+```
+
+## AI Entegrasyonu
+
+- `POST /api/v1/ai-predict`: aynı girişlerle AI modelinden GO/CONDITIONAL/NO-GO tahmini alır.
+- `GET /api/v1/ai/metrics`: modelin doğruluk ve sınıflandırma raporunu döndürür.
+
+Streamlit arayüzü, model eğitilmişse AI tahminini ve model performansını de ekranda gösterir.
+
+## AI Prototip ve Eğitim
+
+Projeye yapay zeka eklemek için sentetik veri üretip bir model eğitebilirsiniz:
+
+```bash
+python train_ai.py --samples 2000
+```
+
+Bu komut, `synthetic_launch_dataset.csv` ve `app/models/ai_model.joblib` dosyalarını oluşturur.
+
