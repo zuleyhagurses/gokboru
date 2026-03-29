@@ -5,8 +5,6 @@ from datetime import datetime
 import uuid
 
 
-# ─── Input Schemas ────────────────────────────────────────────────────────────
-
 class MeteorologicalInput(BaseModel):
     wind_speed_knots: float = Field(..., ge=0, le=150, description="Rüzgar hızı (knot cinsinden)")
     wind_direction_deg: float = Field(..., ge=0, le=360, description="Rüzgar yönü (derece cinsinden)")
@@ -60,8 +58,6 @@ class LaunchSimulationRequest(BaseModel):
     weights: ScoringWeights = Field(default_factory=ScoringWeights)
     site_name: str = Field(default="ADLANDIRILMAMIŞ_TESİS", max_length=64)
 
-
-# ─── Output Schemas ───────────────────────────────────────────────────────────
 
 class SafetyOverride(BaseModel):
     model_config = ConfigDict(json_schema_extra=None)
@@ -135,3 +131,4 @@ class AIMetricsResponse(BaseModel):
     ai_dataset_path: str = Field(description="Değerlendirme için kullanılan dataset yolu")
     accuracy: float = Field(..., ge=0, le=1, description="Doğruluk skoru")
     report: str = Field(description="Sınıflandırma raporu")
+    confusion_matrix: list[list[int]] = Field(description="Karışıklık matrisi")

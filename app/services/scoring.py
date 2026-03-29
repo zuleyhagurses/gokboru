@@ -13,15 +13,9 @@ from app.models.schemas import (
     SafetyOverride,
 )
 
-
-# ─── Constants ─────────────────────────────────────────────────────────────────
-
 WIND_SPEED_HARD_LIMIT_KNOTS: float = 30.0
 LIGHTNING_HARD_LIMIT_PERCENT: float = 20.0
 EQUATORIAL_VELOCITY_MS: float = 465.0  # m/s at equator
-
-
-# ─── Safety Override ───────────────────────────────────────────────────────────
 
 def evaluate_safety_override(met: MeteorologicalInput) -> SafetyOverride:
     if met.wind_speed_knots > WIND_SPEED_HARD_LIMIT_KNOTS:

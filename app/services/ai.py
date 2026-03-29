@@ -58,12 +58,34 @@ def _sample_meteorological() -> MeteorologicalInput:
     )
 
 
+def _sample_meteorological_go() -> MeteorologicalInput:
+    """GO sınıfı için ideal meteorolojik koşullar üretir"""
+    return MeteorologicalInput(
+        wind_speed_knots=round(random.uniform(0.0, 15.0), 2),  # Düşük rüzgar
+        wind_direction_deg=round(random.uniform(0.0, 360.0), 2),
+        humidity_percent=round(random.uniform(30.0, 60.0), 2),  # Optimal nem
+        cloud_coverage_percent=round(random.uniform(0.0, 20.0), 2),  # Açık gökyüzü
+        lightning_probability_percent=round(random.uniform(0.0, 5.0), 2),  # Çok düşük yıldırım riski
+        temperature_celsius=round(random.uniform(15.0, 30.0), 2),  # Optimal sıcaklık
+    )
+
+
 def _sample_geographic() -> GeographicInput:
     return GeographicInput(
         latitude_deg=round(random.uniform(-60.0, 60.0), 4),
         longitude_deg=round(random.uniform(-180.0, 180.0), 4),
         distance_to_nearest_city_km=round(random.uniform(0.0, 1000.0), 2),
         elevation_m=round(random.uniform(-200.0, 4500.0), 2),
+    )
+
+
+def _sample_geographic_go() -> GeographicInput:
+    """GO sınıfı için ideal coğrafi koşullar üretir"""
+    return GeographicInput(
+        latitude_deg=round(random.uniform(-30.0, 30.0), 4),  # Ekvatora yakın
+        longitude_deg=round(random.uniform(-180.0, 180.0), 4),
+        distance_to_nearest_city_km=round(random.uniform(50.0, 500.0), 2),  # Güvenli mesafe
+        elevation_m=round(random.uniform(0.0, 2000.0), 2),  # Uygun yükseklik
     )
 
 
@@ -77,6 +99,17 @@ def _sample_logistic() -> LogisticInput:
     )
 
 
+def _sample_logistic_go() -> LogisticInput:
+    """GO sınıfı için ideal lojistik koşullar üretir"""
+    return LogisticInput(
+        fuel_availability_percent=round(random.uniform(90.0, 100.0), 2),  # Yüksek yakıt
+        infrastructure_readiness_percent=round(random.uniform(90.0, 100.0), 2),  # Tam altyapı
+        range_safety_cleared=True,  # Güvenlik onaylı
+        crew_readiness_percent=round(random.uniform(90.0, 100.0), 2),  # Hazır mürettebat
+        supply_chain_index=round(random.uniform(90.0, 100.0), 2),  # Mükemmel tedarik
+    )
+
+
 def _sample_environmental() -> EnvironmentalInput:
     return EnvironmentalInput(
         noise_level_db=round(random.uniform(60.0, 160.0), 2),
@@ -84,6 +117,17 @@ def _sample_environmental() -> EnvironmentalInput:
         ecosystem_proximity_km=round(random.uniform(0.0, 800.0), 2),
         water_contamination_risk=round(random.uniform(0.0, 70.0), 2),
         carbon_footprint_kg=round(random.uniform(200.0, 4500.0), 2),
+    )
+
+
+def _sample_environmental_go() -> EnvironmentalInput:
+    """GO sınıfı için ideal çevresel koşullar üretir"""
+    return EnvironmentalInput(
+        noise_level_db=round(random.uniform(60.0, 120.0), 2),  # Kontrollü gürültü
+        air_quality_index=round(random.uniform(5.0, 50.0), 2),  # Temiz hava
+        ecosystem_proximity_km=round(random.uniform(100.0, 800.0), 2),  # Güvenli mesafe
+        water_contamination_risk=round(random.uniform(0.0, 10.0), 2),  # Düşük risk
+        carbon_footprint_kg=round(random.uniform(200.0, 1500.0), 2),  # Düşük karbon
     )
 
 
@@ -123,15 +167,37 @@ def generate_synthetic_data(
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
 
-        for _ in range(sample_count):
-            request = LaunchSimulationRequest(
-                meteorological=_sample_meteorological(),
-                geographic=_sample_geographic(),
-                logistic=_sample_logistic(),
-                environmental=_sample_environmental(),
-                site_name="SENTETIK_TESIS",
-            )
+        # GO sınıfı için minimum örnek sayısı garanti et
+        go_target = max(50, int(sample_count * 0.15))  # En az 50 veya %15
+        go_count = 0
+
+        for i in range(sample_count):
+            # GO sınıfı için özel üretim stratejisi
+            if go_count < go_target and (i < go_target or random.random() < 0.25):
+                # GO koşullarında veri üret
+                request = LaunchSimulationRequest(
+                    meteorological=_sample_meteorological_go(),
+                    geographic=_sample_geographic_go(),
+                    logistic=_sample_logistic_go(),
+                    environmental=_sample_environmental_go(),
+                    site_name="SENTETIK_GO_TESIS",
+                )
+            else:
+                # Normal rastgele veri üret
+                request = LaunchSimulationRequest(
+                    meteorological=_sample_meteorological(),
+                    geographic=_sample_geographic(),
+                    logistic=_sample_logistic(),
+                    environmental=_sample_environmental(),
+                    site_name="SENTETIK_TESIS",
+                )
+
             result = run_simulation(request)
+
+            # GO hedefini karşıladıysak say
+            if result.status == "GO":
+                go_count += 1
+
             row = _flatten_request(request)
             row["launch_readiness_score"] = result.launch_readiness_score
             row["status"] = result.status
@@ -193,13 +259,20 @@ def train_ai_model(
 def evaluate_ai_model(
     dataset_path: Path = DEFAULT_DATASET_PATH,
     model_path: Path = DEFAULT_MODEL_PATH,
-) -> tuple[float, str]:
+) -> tuple[float, str, list]:
+    from sklearn.metrics import confusion_matrix
+
     X, y = _load_dataset(dataset_path)
     model = load_ai_model(model_path)
     predictions = model.predict(X)
     accuracy = accuracy_score(y, predictions)
     report = classification_report(y, predictions, target_names=STATUS_ORDER)
-    return accuracy, report
+
+    # Confusion matrix hesapla
+    cm = confusion_matrix(y, predictions, labels=STATUS_ORDER)
+    cm_list = cm.tolist()
+
+    return accuracy, report, cm_list
 
 
 def load_ai_model(model_path: Path = DEFAULT_MODEL_PATH) -> RandomForestClassifier:

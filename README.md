@@ -1,13 +1,10 @@
 # 🇹🇷 Gökbörü: Akıllı Fırlatma Karar Sistemi
-<<<<<<< HEAD
-=======
 
 Bu proje, Türkçe yerelleştirilmiş bir füze fırlatma karar destek sistemi için prototip bir backend ve frontend içerir. AI hazır hale gelmesi için sentetik veri üretimi ve model eğitimi desteklenmiştir.
 
 ## Kurulum
 
 1. Sanal ortam oluşturun:
->>>>>>> 4e15dd194cd2b3b029f6db32e7eb691c62ea5628
 
 ```bash
 python -m venv .venv

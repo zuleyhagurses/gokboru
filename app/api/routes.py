@@ -17,7 +17,6 @@ from app.services.simulation import run_simulation
 
 router = APIRouter()
 
-# In-memory store — keyed by simulation_id for O(1) dedup
 _simulation_history: dict[str, LaunchSimulationResult] = {}
 
 
@@ -74,7 +73,7 @@ def predict_launch_with_ai(request: LaunchSimulationRequest) -> AIPredictionResu
 )
 def get_ai_metrics() -> AIMetricsResponse:
     try:
-        accuracy, report = evaluate_ai_model()
+        accuracy, report, confusion_matrix = evaluate_ai_model()
     except FileNotFoundError as exc:
         raise HTTPException(
             status_code=404,
@@ -90,6 +89,7 @@ def get_ai_metrics() -> AIMetricsResponse:
         ai_dataset_path=str(DEFAULT_DATASET_PATH),
         accuracy=accuracy,
         report=report,
+        confusion_matrix=confusion_matrix,
     )
 
 

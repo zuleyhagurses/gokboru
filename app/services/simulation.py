@@ -45,7 +45,6 @@ def _build_recommendation(status: str, score: float, override: bool, override_re
 
 
 def run_simulation(request: LaunchSimulationRequest) -> LaunchSimulationResult:
-    # Step 1: Safety override (hard rules, bypass scoring)
     override = evaluate_safety_override(request.meteorological)
 
     # Step 2: Domain scores
